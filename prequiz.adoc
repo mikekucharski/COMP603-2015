@@ -21,40 +21,40 @@ git push -u --all origin
 == Questions
 
 What is the difference between a set, a bag, and a sequence?
-
+A set, bag, and sequence are all data structures. A set is a collection of elements that does not allow repeated elements. A bag is similar except it allows repeated elements. I have not specifically used a sequence before but I assume it follows a list format (might keep track of things like front, end, and order of elements)
 
 What is a language (in terms of sets and sequences)?
-
+A language is a collection of statements that, when put together, have semantic meaning.
 
 What is a compiler? Name some.
-
+A compiler is a program that takes language code as input and produces output. The compiler's job is to translate the code into object code which can then be combined into executable machine code.
 
 What is an interpreter? How does that differ from a compiler?
-
+An interpreter reads code line-by-line and executes statements as it goes. This is different than a compiler because their is no executable output produced. Ruby and Python are examples of interpretted languages while C++ is an example of a compiled language. 
 
 What is the derivative of a language?
-
+No idea.
 
 What is a regular expression?
-
+A regular expression is a string used for string pattern matching. Each character in a regular expression string has special meaning that will affect the matching process.
 
 What is a finite automaton, and what is the difference between an NFA and a DFA?
-
+A finite automaton is a theoretical diagram for determining the states of system. Two types are Non-Deterministic and Determininstic but I am not sure what the differences are.
 
 What is a grammar, and what is the difference between regular grammars, context-free grammars, LL(k) and LR(k)?
-
+Note sure.
 
 What is the difference between derivative parsing, recursive-descent parsing, shift-reduce parsing and parser combinators?
-
+Not sure.
 
 What is a visitor?
-
+Not sure.
 
 What is the difference between a parse tree and an abstract syntax tree?
-
+Not sure.
 
 Name some optimizations.
-
+Not sure.
 
 What questions do you have for me?
-
+None.
