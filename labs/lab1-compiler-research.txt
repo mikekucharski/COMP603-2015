@@ -1,0 +1,20 @@
+1. Chose a compiler: 
+Tiny C Compiler (TCC)
+
+2. Identify which files/functions are responsible for each phase in the compiler source (scan/lex/tokenize, parse, AST, optimization, code generation).
+
+Scan/lex/tokenize: tcccoff.c
+Parse: tcc.c
+AST: not sure...
+Optimization: Cheated and googled documentation for this one... apparently they used bit shifts instead of multiplication/division when possible. Also, ||, &&, and ! binary operators were optimized using a 'jump target' value. Not sure what that means or how it is more effecient...
+Code generation: tccgen.c, i386-gen.c, arm-gen.c
+
+3. What was the most ridiculous thing you found? (funny comments? awful code?)
+
+This sounds like those comments that don't really add anything/add clarity to the code..
+
+/* free all files */
+tcc_free(files);
+
+4. Take notes along the way (if you find something that’s unrelated to a compiler phase, try to infer what it’s doing).
+I found a few of files for bound check for memory bounds (apparently thats important). Also, I found a bunch of import files for supporting the C language. This includes ANSI C standard for floating point number support, GNU C extensions, and special labels.
