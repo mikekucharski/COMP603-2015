@@ -107,22 +107,41 @@ class Program : public Container {
  */
 void parse(fstream & file, Container * container) {
     char c;
+    while(file >> c) {
+        Loop *loopNode;
+        switch(c) {
+            case '+': container->children.push_back(new CommandNode(c)); break;
+            case '-': container->children.push_back(new CommandNode(c)); break;
+            case '<': container->children.push_back(new CommandNode(c)); break;
+            case '>': container->children.push_back(new CommandNode(c)); break;
+            case ',': container->children.push_back(new CommandNode(c)); break;
+            case '.': container->children.push_back(new CommandNode(c)); break;
+            case '[':
+                loopNode = new Loop;
+                parse(file, loopNode);
+                container->children.push_back(loopNode);
+                break;
+            case ']':
+                return;
+        }
+    }
+    //char c;
     // How to peek at the next character
-    c = (char)file.peek();
+    //c = (char)file.peek();
     // How to print out that character
-    cout << c;
+    //cout << c;
     // How to read a character from the file and advance to the next character
-    file >> c;
+    //file >> c;
     // How to print out that character
-    cout << c;
+    //cout << c;
     // How to insert a node into the container.
-    container->children.push_back(new CommandNode(c));
+    //container->children.push_back(new CommandNode(c));
 }
 
 /**
  * A printer for Brainfuck abstract syntax trees.
  * As a visitor, it will just print out the commands as is.
- * For Loops and the root Program node, it walks trough all the children.
+ * For Loops and the root Program node, it walks through all the children.
  */
 class Printer : public Visitor {
     public:
