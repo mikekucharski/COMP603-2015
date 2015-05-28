@@ -12,6 +12,7 @@ brainfuck.exe helloworld.bf
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <string.h>
 
 using namespace std;
 
@@ -107,15 +108,12 @@ class Program : public Container {
  */
 void parse(fstream & file, Container * container) {
     char c;
-    while(file >> c) {
+    while (file >> c) {
         Loop *loopNode;
         switch(c) {
-            case '+': container->children.push_back(new CommandNode(c)); break;
-            case '-': container->children.push_back(new CommandNode(c)); break;
-            case '<': container->children.push_back(new CommandNode(c)); break;
-            case '>': container->children.push_back(new CommandNode(c)); break;
-            case ',': container->children.push_back(new CommandNode(c)); break;
-            case '.': container->children.push_back(new CommandNode(c)); break;
+            case '+': case '-': case '<': case '>': case ',': case '.': 
+                container->children.push_back(new CommandNode(c)); 
+                break;
             case '[':
                 loopNode = new Loop;
                 parse(file, loopNode);
@@ -125,17 +123,6 @@ void parse(fstream & file, Container * container) {
                 return;
         }
     }
-    //char c;
-    // How to peek at the next character
-    //c = (char)file.peek();
-    // How to print out that character
-    //cout << c;
-    // How to read a character from the file and advance to the next character
-    //file >> c;
-    // How to print out that character
-    //cout << c;
-    // How to insert a node into the container.
-    //container->children.push_back(new CommandNode(c));
 }
 
 /**
@@ -177,27 +164,37 @@ class Interpreter : public Visitor {
         void visit(const CommandNode * leaf) {
             switch (leaf->command) {
                 case INCREMENT:
+                    memory[pointer]++;
                     break;
                 case DECREMENT:
+                    memory[pointer]--;
                     break;
                 case SHIFT_LEFT:
+                    pointer--;
                     break;
                 case SHIFT_RIGHT:
+                    pointer++;
                     break;
                 case INPUT:
+                    cin >> memory[pointer];
                     break;
                 case OUTPUT:
+                    cout << memory[pointer];
                     break;
             }
         }
         void visit(const Loop * loop) {
-            for (vector<Node*>::const_iterator it = loop->children.begin(); it != loop->children.end(); ++it) {
-                (*it)->accept(this);
+            while (memory[pointer] != 0) {
+                for (vector<Node*>::const_iterator it = loop->children.begin(); it != loop->children.end(); ++it) {
+                    (*it)->accept(this);
+                }
             }
         }
         void visit(const Program * program) {
             // zero init the memory array
             // set pointer to zero
+            memset(memory, 0, 30000);
+            pointer = 0;
             for (vector<Node*>::const_iterator it = program->children.begin(); it != program->children.end(); ++it) {
                 (*it)->accept(this);
             }
@@ -215,7 +212,7 @@ int main(int argc, char *argv[]) {
         for (int i = 1; i < argc; i++) {
             file.open(argv[i], fstream::in);
             parse(file, & program);
-//            program.accept(&printer);
+            // program.accept(&printer);
             program.accept(&interpreter);
             file.close();
         }
