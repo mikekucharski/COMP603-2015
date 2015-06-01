@@ -165,7 +165,7 @@ class Compiler : public Visitor {
                 case DECREMENT:   cout << "box[i]--;\n"; break;
                 case SHIFT_LEFT:  cout << "i--;\n"; break;
                 case SHIFT_RIGHT: cout << "i++;\n"; break;
-                case INPUT:       cout << "box[i] = s.nextChar();\n"; break;
+                case INPUT:       cout << "box[i] = s.next().charAt(0);\n"; break;
                 case OUTPUT:      cout << "System.out.print(box[i]);\n"; break;
             }
         }
@@ -177,7 +177,7 @@ class Compiler : public Visitor {
             cout << "}\n";
         }
         void visit(const Program * program) {
-            cout << "import java.util.Scanner;\n\nclass Helloworld {\npublic static void main(String[] args) {\nchar[] box = new char[30000];\nint i = 0;\nScanner s = new Scanner(System.in);\n";
+            cout << "import java.util.Scanner;\n\nclass Echo {\npublic static void main(String[] args) {\nchar[] box = new char[30000];\nint i = 0;\nScanner s = new Scanner(System.in);\n";
             for (vector<Node*>::const_iterator it = program->children.begin(); it != program->children.end(); ++it) {
                 (*it)->accept(this);
             }
