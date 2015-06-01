@@ -157,6 +157,34 @@ class Printer : public Visitor {
         }
 };
 
+class Compiler : public Visitor {
+    public:
+        void visit(const CommandNode * leaf) {
+            switch (leaf->command) {
+                case INCREMENT:   cout << "box[i]++;\n"; break;
+                case DECREMENT:   cout << "box[i]--;\n"; break;
+                case SHIFT_LEFT:  cout << "i--;\n"; break;
+                case SHIFT_RIGHT: cout << "i++;\n"; break;
+                case INPUT:       cout << "box[i] = s.nextChar();\n"; break;
+                case OUTPUT:      cout << "System.out.print(box[i]);\n"; break;
+            }
+        }
+        void visit(const Loop * loop) {
+            cout << "while(box[i] != 0) {\n";
+            for (vector<Node*>::const_iterator it = loop->children.begin(); it != loop->children.end(); ++it) {
+                (*it)->accept(this);
+            }
+            cout << "}\n";
+        }
+        void visit(const Program * program) {
+            cout << "import java.util.Scanner;\n\nclass Helloworld {\npublic static void main(String[] args) {\nchar[] box = new char[30000];\nint i = 0;\nScanner s = new Scanner(System.in);\n";
+            for (vector<Node*>::const_iterator it = program->children.begin(); it != program->children.end(); ++it) {
+                (*it)->accept(this);
+            }
+            cout << "}\n}\n";
+        }
+};
+
 class Interpreter : public Visitor {
     char memory[30000];
     int pointer;
@@ -206,6 +234,7 @@ int main(int argc, char *argv[]) {
     Program program;
     Printer printer;
     Interpreter interpreter;
+    Compiler compiler;
     if (argc == 1) {
         cout << argv[0] << ": No input files." << endl;
     } else if (argc > 1) {
@@ -213,7 +242,8 @@ int main(int argc, char *argv[]) {
             file.open(argv[i], fstream::in);
             parse(file, & program);
             // program.accept(&printer);
-            program.accept(&interpreter);
+            // program.accept(&interpreter);
+            program.accept(&compiler);
             file.close();
         }
     }
