@@ -25,7 +25,8 @@ typedef enum {
     SHIFT_LEFT, // <
     SHIFT_RIGHT, // >
     INPUT, // ,
-    OUTPUT // .
+    OUTPUT, // .
+    ZERO
 } Command;
 
 // Forward references. Silly C++!
@@ -59,7 +60,9 @@ class Node {
 class CommandNode : public Node {
     public:
         Command command;
-        CommandNode(char c) {
+        int count;
+        CommandNode(char c, int count) {
+            this->count = count;
             switch(c) {
                 case '+': command = INCREMENT; break;
                 case '-': command = DECREMENT; break;
@@ -67,6 +70,7 @@ class CommandNode : public Node {
                 case '>': command = SHIFT_RIGHT; break;
                 case ',': command = INPUT; break;
                 case '.': command = OUTPUT; break;
+                case '0': command = ZERO; break;
             }
         }
         void accept (Visitor * v) {
@@ -108,15 +112,30 @@ class Program : public Container {
  */
 void parse(fstream & file, Container * container) {
     char c;
+    int count;
     while (file >> c) {
         Loop *loopNode;
         switch(c) {
-            case '+': case '-': case '<': case '>': case ',': case '.': 
-                container->children.push_back(new CommandNode(c)); 
+            case '+': case '-': case '<': case '>': case ',': case '.':
+                count = 1;
+                while( (char) file.peek() == c ) {
+                    file >> c;
+                    count++;
+                }
+                container->children.push_back(new CommandNode(c, count)); 
                 break;
             case '[':
                 loopNode = new Loop;
                 parse(file, loopNode);
+                if (loopNode->children.size() == 1) { // loop has one child
+                    CommandNode* frontNode = (CommandNode*) loopNode->children.front();
+                    if ( frontNode->count == 1 && (frontNode->command == INCREMENT 
+                                               ||  frontNode->command == DECREMENT  ) ){ // if loop child is a single plus or minus
+                        container->children.push_back(new CommandNode('0', 1));  // add single zero CommandNode instead of loop
+                        continue;
+                    }
+                }  
+
                 container->children.push_back(loopNode);
                 break;
             case ']':
@@ -133,13 +152,16 @@ void parse(fstream & file, Container * container) {
 class Printer : public Visitor {
     public:
         void visit(const CommandNode * leaf) {
-            switch (leaf->command) {
-                case INCREMENT:   cout << '+'; break;
-                case DECREMENT:   cout << '-'; break;
-                case SHIFT_LEFT:  cout << '<'; break;
-                case SHIFT_RIGHT: cout << '>'; break;
-                case INPUT:       cout << ','; break;
-                case OUTPUT:      cout << '.'; break;
+            for(int i = 0; i < leaf->count; i++) {
+                switch (leaf->command) {
+                    case INCREMENT:   cout << '+'; break;
+                    case DECREMENT:   cout << '-'; break;
+                    case SHIFT_LEFT:  cout << '<'; break;
+                    case SHIFT_RIGHT: cout << '>'; break;
+                    case INPUT:       cout << ','; break;
+                    case OUTPUT:      cout << '.'; break;
+                    case ZERO:        cout << "[+]"; break;
+                }
             }
         }
         void visit(const Loop * loop) {
@@ -161,12 +183,21 @@ class Compiler : public Visitor {
     public:
         void visit(const CommandNode * leaf) {
             switch (leaf->command) {
-                case INCREMENT:   cout << "box[i]++;\n"; break;
-                case DECREMENT:   cout << "box[i]--;\n"; break;
-                case SHIFT_LEFT:  cout << "i--;\n"; break;
-                case SHIFT_RIGHT: cout << "i++;\n"; break;
-                case INPUT:       cout << "box[i] = s.next().charAt(0);\n"; break;
-                case OUTPUT:      cout << "System.out.print(box[i]);\n"; break;
+                case INCREMENT:   cout << "box[i] += " << leaf->count << ";\n"; break;
+                case DECREMENT:   cout << "box[i] -= " << leaf->count << ";\n"; break;
+                case SHIFT_LEFT:  cout << "i -= " << leaf->count << ";\n"; break;
+                case SHIFT_RIGHT: cout << "i += " << leaf->count << ";\n"; break;
+                case INPUT:       
+                    for(int i = 0; i < leaf->count; i++) {
+                        cout << "box[i] = s.next().charAt(0);\n"; 
+                    }
+                    break;
+                case OUTPUT:
+                    for(int i = 0; i < leaf->count; i++) {
+                        cout << "System.out.print(box[i]);\n"; 
+                    }
+                    break;
+                case ZERO: cout << "box[i] = 0;\n"; break;
             }
         }
         void visit(const Loop * loop) {
@@ -177,7 +208,7 @@ class Compiler : public Visitor {
             cout << "}\n";
         }
         void visit(const Program * program) {
-            cout << "import java.util.Scanner;\n\nclass Echo {\npublic static void main(String[] args) {\nchar[] box = new char[30000];\nint i = 0;\nScanner s = new Scanner(System.in);\n";
+            cout << "import java.util.Scanner;\n\nclass Helloworld {\npublic static void main(String[] args) {\nchar[] box = new char[30000];\nint i = 0;\nScanner s = new Scanner(System.in);\n";
             for (vector<Node*>::const_iterator it = program->children.begin(); it != program->children.end(); ++it) {
                 (*it)->accept(this);
             }
@@ -190,25 +221,30 @@ class Interpreter : public Visitor {
     int pointer;
     public:
         void visit(const CommandNode * leaf) {
-            switch (leaf->command) {
-                case INCREMENT:
-                    memory[pointer]++;
-                    break;
-                case DECREMENT:
-                    memory[pointer]--;
-                    break;
-                case SHIFT_LEFT:
-                    pointer--;
-                    break;
-                case SHIFT_RIGHT:
-                    pointer++;
-                    break;
-                case INPUT:
-                    cin >> memory[pointer];
-                    break;
-                case OUTPUT:
-                    cout << memory[pointer];
-                    break;
+            for(int i = 0; i < leaf->count; i++) {
+                switch (leaf->command) {
+                    case INCREMENT:
+                        memory[pointer]++;
+                        break;
+                    case DECREMENT:
+                        memory[pointer]--;
+                        break;
+                    case SHIFT_LEFT:
+                        pointer--;
+                        break;
+                    case SHIFT_RIGHT:
+                        pointer++;
+                        break;
+                    case INPUT:
+                        cin >> memory[pointer];
+                        break;
+                    case OUTPUT:
+                        cout << memory[pointer];
+                        break;
+                    case ZERO:
+                        memory[pointer] = 0;
+                        break;
+                }
             }
         }
         void visit(const Loop * loop) {
